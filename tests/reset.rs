@@ -17,6 +17,9 @@ fn reset_basics() {
     assert_eq!(SWS.alloc_count(), 0);
     assert_eq!(SWS.alloc_sum(), 0);
     assert_eq!(SWS.alloc_avg(), None);
+    assert_eq!(SWS.dealloc_count(), 0);
+    assert_eq!(SWS.dealloc_sum(), 0);
+    assert_eq!(SWS.dealloc_avg(), None);
     assert_eq!(SWS.realloc_growth_count(), 0);
     assert_eq!(SWS.realloc_growth_sum(), 0);
     assert_eq!(SWS.realloc_growth_avg(), None);

@@ -18,6 +18,8 @@ pub struct SystemWithStats;
 pub struct SystemStats {
     pub alloc_count: usize,
     pub alloc_avg: Option<usize>,
+    pub dealloc_count: usize,
+    pub dealloc_avg: Option<usize>,
     pub realloc_growth_count: usize,
     pub realloc_growth_avg: Option<usize>,
     pub realloc_shrink_count: usize,
@@ -37,6 +39,14 @@ impl fmt::Display for SystemStats {
         )?;
         if let Some(alloc_avg) = self.alloc_avg {
             writeln!(f, "\talloc_avg: {}", format_size(alloc_avg, BINARY))?;
+        }
+        writeln!(
+            f,
+            "\tdealloc_count: {}",
+            self.dealloc_count.to_formatted_string(&Locale::en)
+        )?;
+        if let Some(dealloc_avg) = self.dealloc_avg {
+            writeln!(f, "\tdealloc_avg: {}", format_size(dealloc_avg, BINARY))?;
         }
         writeln!(
             f,
@@ -70,6 +80,8 @@ impl fmt::Display for SystemStats {
 
 static ALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
 static ALLOC_SUM: AtomicUsize = AtomicUsize::new(0);
+static DEALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
+static DEALLOC_SUM: AtomicUsize = AtomicUsize::new(0);
 static REALLOC_GROWTH_COUNT: AtomicUsize = AtomicUsize::new(0);
 static REALLOC_GROWTH_SUM: AtomicUsize = AtomicUsize::new(0);
 static REALLOC_SHRINK_COUNT: AtomicUsize = AtomicUsize::new(0);
@@ -84,6 +96,14 @@ impl SystemWithStats {
 
     pub fn alloc_sum(&self) -> usize {
         ALLOC_SUM.load(Ordering::Relaxed)
+    }
+
+    pub fn dealloc_count(&self) -> usize {
+        DEALLOC_COUNT.load(Ordering::Relaxed)
+    }
+
+    pub fn dealloc_sum(&self) -> usize {
+        DEALLOC_SUM.load(Ordering::Relaxed)
     }
 
     pub fn realloc_growth_count(&self) -> usize {
@@ -105,6 +125,12 @@ impl SystemWithStats {
     pub fn alloc_avg(&self) -> Option<usize> {
         let sum = ALLOC_SUM.load(Ordering::Relaxed);
         let count = ALLOC_COUNT.load(Ordering::Relaxed);
+        sum.checked_div(count)
+    }
+
+    pub fn dealloc_avg(&self) -> Option<usize> {
+        let sum = DEALLOC_SUM.load(Ordering::Relaxed);
+        let count = DEALLOC_COUNT.load(Ordering::Relaxed);
         sum.checked_div(count)
     }
 
@@ -131,6 +157,8 @@ impl SystemWithStats {
     pub fn reset(&self) {
         ALLOC_SUM.store(0, Ordering::Relaxed);
         ALLOC_COUNT.store(0, Ordering::Relaxed);
+        DEALLOC_SUM.store(0, Ordering::Relaxed);
+        DEALLOC_COUNT.store(0, Ordering::Relaxed);
         REALLOC_GROWTH_COUNT.store(0, Ordering::Relaxed);
         REALLOC_GROWTH_SUM.store(0, Ordering::Relaxed);
         REALLOC_SHRINK_COUNT.store(0, Ordering::Relaxed);
@@ -142,6 +170,10 @@ impl SystemWithStats {
         let alloc_count = self.alloc_count();
         let alloc_sum = self.alloc_sum();
         let alloc_avg = alloc_sum.checked_div(alloc_count);
+
+        let dealloc_count = self.dealloc_count();
+        let dealloc_sum = self.dealloc_sum();
+        let dealloc_avg = dealloc_sum.checked_div(dealloc_count);
 
         let realloc_growth_count = self.realloc_growth_count();
         let realloc_growth_sum = self.realloc_growth_sum();
@@ -157,6 +189,8 @@ impl SystemWithStats {
         SystemStats {
             alloc_count,
             alloc_avg,
+            dealloc_count,
+            dealloc_avg,
             realloc_growth_count,
             realloc_growth_avg,
             realloc_shrink_count,
@@ -182,7 +216,10 @@ unsafe impl GlobalAlloc for SystemWithStats {
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         System.dealloc(ptr, layout);
-        USE_CURR.fetch_sub(layout.size(), Ordering::Relaxed);
+        let size = layout.size();
+        USE_CURR.fetch_sub(size, Ordering::Relaxed);
+        DEALLOC_SUM.fetch_add(size, Ordering::Relaxed);
+        DEALLOC_COUNT.fetch_add(1, Ordering::Relaxed);
     }
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {

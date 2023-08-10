@@ -18,6 +18,8 @@ fn alloc_basics() {
     assert_eq!(SWS.alloc_count(), 1);
     assert_eq!(SWS.alloc_sum(), 1);
     assert_eq!(SWS.alloc_avg(), Some(1));
+    assert_eq!(SWS.dealloc_count(), 0);
+    assert_eq!(SWS.dealloc_sum(), 0);
     assert_eq!(SWS.use_curr(), initial_use_curr + 1);
     assert_eq!(SWS.use_max(), initial_use_max + 1);
 
@@ -26,6 +28,8 @@ fn alloc_basics() {
     assert_eq!(SWS.alloc_count(), 2);
     assert_eq!(SWS.alloc_sum(), 5);
     assert_eq!(SWS.alloc_avg(), Some(2));
+    assert_eq!(SWS.dealloc_count(), 0);
+    assert_eq!(SWS.dealloc_sum(), 0);
     assert_eq!(SWS.use_curr(), initial_use_curr + 5);
     assert_eq!(SWS.use_max(), initial_use_max + 5);
 
@@ -34,6 +38,8 @@ fn alloc_basics() {
     assert_eq!(SWS.alloc_count(), 3);
     assert_eq!(SWS.alloc_sum(), 100);
     assert_eq!(SWS.alloc_avg(), Some(33));
+    assert_eq!(SWS.dealloc_count(), 0);
+    assert_eq!(SWS.dealloc_sum(), 0);
     assert_eq!(SWS.use_curr(), initial_use_curr + 100);
     assert_eq!(SWS.use_max(), initial_use_max + 100);
 
@@ -44,6 +50,8 @@ fn alloc_basics() {
     drop(alloc_1);
     assert_eq!(SWS.alloc_count(), 3);
     assert_eq!(SWS.alloc_sum(), 100);
+    assert_eq!(SWS.dealloc_count(), 1);
+    assert_eq!(SWS.dealloc_sum(), 1);
     assert_eq!(SWS.use_curr(), use_max - 1);
     assert_eq!(SWS.use_max(), use_max);
 
@@ -51,6 +59,8 @@ fn alloc_basics() {
     drop(alloc_4);
     assert_eq!(SWS.alloc_count(), 3);
     assert_eq!(SWS.alloc_sum(), 100);
+    assert_eq!(SWS.dealloc_count(), 2);
+    assert_eq!(SWS.dealloc_sum(), 5);
     assert_eq!(SWS.use_curr(), use_max - 5);
     assert_eq!(SWS.use_max(), use_max);
 
@@ -58,6 +68,8 @@ fn alloc_basics() {
     drop(alloc_95);
     assert_eq!(SWS.alloc_count(), 3);
     assert_eq!(SWS.alloc_sum(), 100);
+    assert_eq!(SWS.dealloc_count(), 3);
+    assert_eq!(SWS.dealloc_sum(), 100);
     assert_eq!(SWS.use_curr(), use_max - 100);
     assert_eq!(SWS.use_max(), use_max);
 }
