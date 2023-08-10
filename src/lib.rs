@@ -2,6 +2,7 @@
 use std::fmt;
 use std::{
     alloc::{GlobalAlloc, Layout, System},
+    cmp, ptr,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
@@ -185,16 +186,24 @@ unsafe impl GlobalAlloc for SystemWithStats {
     }
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-        let ret = System.realloc(ptr, layout, new_size);
-        if !ret.is_null() {
+        let new_layout = unsafe { Layout::from_size_align_unchecked(new_size, layout.align()) };
+        let new_ptr = unsafe { self.alloc(new_layout) };
+        if !new_ptr.is_null() {
             if new_size > layout.size() {
+                let diff = new_size - layout.size();
                 REALLOC_GROWTH_COUNT.fetch_add(1, Ordering::Relaxed);
-                REALLOC_GROWTH_SUM.fetch_add(new_size - layout.size(), Ordering::Relaxed);
+                REALLOC_GROWTH_SUM.fetch_add(diff, Ordering::Relaxed);
             } else {
+                let diff = layout.size() - new_size;
                 REALLOC_SHRINK_COUNT.fetch_add(1, Ordering::Relaxed);
-                REALLOC_SHRINK_SUM.fetch_add(layout.size() - new_size, Ordering::Relaxed);
+                REALLOC_SHRINK_SUM.fetch_add(diff, Ordering::Relaxed);
+            }
+
+            unsafe {
+                ptr::copy_nonoverlapping(ptr, new_ptr, cmp::min(layout.size(), new_size));
+                self.dealloc(ptr, layout);
             }
         }
-        ret
+        new_ptr
     }
 }
