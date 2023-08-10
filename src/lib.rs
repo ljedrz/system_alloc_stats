@@ -1,7 +1,14 @@
+#[cfg(feature = "fmt")]
+use std::fmt;
 use std::{
     alloc::{GlobalAlloc, Layout, System},
     sync::atomic::{AtomicUsize, Ordering},
 };
+
+#[cfg(feature = "fmt")]
+use humansize::{format_size, BINARY};
+#[cfg(feature = "fmt")]
+use num_format::{Locale, ToFormattedString};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct SystemWithStats;
@@ -16,6 +23,48 @@ pub struct SystemStats {
     pub realloc_shrink_avg: Option<usize>,
     pub use_curr: usize,
     pub use_max: usize,
+}
+
+#[cfg(feature = "fmt")]
+impl fmt::Display for SystemStats {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "SystemStats {{")?;
+        writeln!(
+            f,
+            "\talloc_count: {}",
+            self.alloc_count.to_formatted_string(&Locale::en)
+        )?;
+        if let Some(alloc_avg) = self.alloc_avg {
+            writeln!(f, "\talloc_avg: {}", format_size(alloc_avg, BINARY))?;
+        }
+        writeln!(
+            f,
+            "\trealloc_growth_count: {}",
+            self.realloc_growth_count.to_formatted_string(&Locale::en)
+        )?;
+        if let Some(realloc_growth_avg) = self.realloc_growth_avg {
+            writeln!(
+                f,
+                "\trealloc_growth_avg: {}",
+                format_size(realloc_growth_avg, BINARY)
+            )?;
+        }
+        writeln!(
+            f,
+            "\trealloc_shrink_count: {}",
+            self.realloc_shrink_count.to_formatted_string(&Locale::en)
+        )?;
+        if let Some(realloc_shrink_avg) = self.realloc_shrink_avg {
+            writeln!(
+                f,
+                "\trealloc_shrink_avg: {}",
+                format_size(realloc_shrink_avg, BINARY)
+            )?;
+        }
+        writeln!(f, "\tuse_curr: {}", format_size(self.use_curr, BINARY))?;
+        writeln!(f, "\tuse_max: {}", format_size(self.use_max, BINARY))?;
+        writeln!(f, "}}")
+    }
 }
 
 static ALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);

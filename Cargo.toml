@@ -3,4 +3,9 @@ name = "alloc_stats"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+fmt = ["dep:humansize", "dep:num-format"]
+
 [dependencies]
+humansize = { version = "2", optional = true }
+num-format = { version = "0.4", optional = true }
