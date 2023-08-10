@@ -173,7 +173,7 @@ unsafe impl GlobalAlloc for SystemWithStats {
             let size = layout.size();
             ALLOC_SUM.fetch_add(size, Ordering::Relaxed);
             ALLOC_COUNT.fetch_add(1, Ordering::Relaxed);
-            let curr = USE_CURR.fetch_add(size, Ordering::Relaxed);
+            let curr = USE_CURR.fetch_add(size, Ordering::Relaxed) + size;
             USE_MAX.fetch_max(curr, Ordering::Relaxed);
         }
         ret
