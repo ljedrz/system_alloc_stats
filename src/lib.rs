@@ -101,19 +101,19 @@ impl SystemWithStats {
         REALLOC_SHRINK_SUM.load(Ordering::Relaxed)
     }
 
-    pub fn avg_alloc_size(&self) -> Option<usize> {
+    pub fn alloc_avg(&self) -> Option<usize> {
         let sum = ALLOC_SUM.load(Ordering::Relaxed);
         let count = ALLOC_COUNT.load(Ordering::Relaxed);
         sum.checked_div(count)
     }
 
-    pub fn avg_realloc_growth_size(&self) -> Option<usize> {
+    pub fn realloc_growth_avg(&self) -> Option<usize> {
         let sum = REALLOC_GROWTH_SUM.load(Ordering::Relaxed);
         let count = REALLOC_GROWTH_COUNT.load(Ordering::Relaxed);
         sum.checked_div(count)
     }
 
-    pub fn avg_realloc_shrink_size(&self) -> Option<usize> {
+    pub fn realloc_shrink_avg(&self) -> Option<usize> {
         let sum = REALLOC_SHRINK_SUM.load(Ordering::Relaxed);
         let count = REALLOC_SHRINK_COUNT.load(Ordering::Relaxed);
         sum.checked_div(count)
