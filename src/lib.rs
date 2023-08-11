@@ -11,20 +11,32 @@ use humansize::{format_size, BINARY};
 #[cfg(feature = "fmt")]
 use num_format::{Locale, ToFormattedString};
 
+/// The `System` allocator enhanced with stats.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct SystemWithStats;
 
+/// A summary of the `System` allocator's stats.
 #[derive(Debug, Default, Clone)]
 pub struct SystemStats {
+    /// The total number of allocations.
     pub alloc_count: usize,
+    /// The average size of allocations.
     pub alloc_avg: Option<usize>,
+    /// The total number of deallocations.
     pub dealloc_count: usize,
+    /// The average size of deallocations.
     pub dealloc_avg: Option<usize>,
+    /// The total number of reallocations caused by object growth.
     pub realloc_growth_count: usize,
+    /// The average size of reallocations caused by object growth.
     pub realloc_growth_avg: Option<usize>,
+    /// The total number of reallocations caused by object shrinkage.
     pub realloc_shrink_count: usize,
+    /// The average size of reallocations caused by object shrinkage.
     pub realloc_shrink_avg: Option<usize>,
+    /// Current heap use.
     pub use_curr: usize,
+    /// Maximum recorded heap use.
     pub use_max: usize,
 }
 
@@ -90,70 +102,86 @@ static USE_CURR: AtomicUsize = AtomicUsize::new(0);
 static USE_MAX: AtomicUsize = AtomicUsize::new(0);
 
 impl SystemWithStats {
+    /// Returns the total number of allocations.
     pub fn alloc_count(&self) -> usize {
         ALLOC_COUNT.load(Ordering::Relaxed)
     }
 
+    /// Returns the sum of all allocations.
     pub fn alloc_sum(&self) -> usize {
         ALLOC_SUM.load(Ordering::Relaxed)
     }
 
+    /// Returns the total number of deallocations.
     pub fn dealloc_count(&self) -> usize {
         DEALLOC_COUNT.load(Ordering::Relaxed)
     }
 
+    /// Returns the sum of all deallocations.
     pub fn dealloc_sum(&self) -> usize {
         DEALLOC_SUM.load(Ordering::Relaxed)
     }
 
+    /// Returns the total number of reallocations caused by object growth.
     pub fn realloc_growth_count(&self) -> usize {
         REALLOC_GROWTH_COUNT.load(Ordering::Relaxed)
     }
 
+    /// Returns the sum of all reallocations caused by object growth.
     pub fn realloc_growth_sum(&self) -> usize {
         REALLOC_GROWTH_SUM.load(Ordering::Relaxed)
     }
 
+    /// Returns the total number of reallocations caused by object shrinkage.
     pub fn realloc_shrink_count(&self) -> usize {
         REALLOC_SHRINK_COUNT.load(Ordering::Relaxed)
     }
 
+    /// Returns the sum of all reallocations caused by object shrinkage.
     pub fn realloc_shrink_sum(&self) -> usize {
         REALLOC_SHRINK_SUM.load(Ordering::Relaxed)
     }
 
+    /// Returns the average size of allocations.
     pub fn alloc_avg(&self) -> Option<usize> {
         let sum = ALLOC_SUM.load(Ordering::Relaxed);
         let count = ALLOC_COUNT.load(Ordering::Relaxed);
         sum.checked_div(count)
     }
 
+    /// Returns the average size of deallocations.
     pub fn dealloc_avg(&self) -> Option<usize> {
         let sum = DEALLOC_SUM.load(Ordering::Relaxed);
         let count = DEALLOC_COUNT.load(Ordering::Relaxed);
         sum.checked_div(count)
     }
 
+    /// Returns the average size of reallocations caused by object growth.
     pub fn realloc_growth_avg(&self) -> Option<usize> {
         let sum = REALLOC_GROWTH_SUM.load(Ordering::Relaxed);
         let count = REALLOC_GROWTH_COUNT.load(Ordering::Relaxed);
         sum.checked_div(count)
     }
 
+    /// Returns the average size of reallocations caused by object shrinkage.
     pub fn realloc_shrink_avg(&self) -> Option<usize> {
         let sum = REALLOC_SHRINK_SUM.load(Ordering::Relaxed);
         let count = REALLOC_SHRINK_COUNT.load(Ordering::Relaxed);
         sum.checked_div(count)
     }
 
+    /// Returns current heap use.
     pub fn use_curr(&self) -> usize {
         USE_CURR.load(Ordering::Relaxed)
     }
 
+    /// Returns maximum recorded heap use.
     pub fn use_max(&self) -> usize {
         USE_MAX.load(Ordering::Relaxed)
     }
 
+    /// Sets the stats to 0, except for current heap use (which is unaffected)
+    /// and maximum heap use, which is reset to the value of current heap use.
     pub fn reset(&self) {
         ALLOC_SUM.store(0, Ordering::Relaxed);
         ALLOC_COUNT.store(0, Ordering::Relaxed);
@@ -166,6 +194,7 @@ impl SystemWithStats {
         USE_MAX.store(self.use_curr(), Ordering::Relaxed);
     }
 
+    /// Returns a summary of the allocator's stats.
     pub fn stats(&self) -> SystemStats {
         let alloc_count = self.alloc_count();
         let alloc_sum = self.alloc_sum();
