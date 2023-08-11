@@ -5,7 +5,8 @@ edition = "2021"
 authors = ["ljedrz <ljedrz@gmail.com>"]
 license = "CC0-1.0"
 categories  = ["memory-management"]
-keywords    = ["allocator", "heap", "memory"]
+keywords = ["allocator", "heap", "memory"]
+description = "A wrapper exposing some stats for the System allocator."
 
 [features]
 fmt = ["dep:humansize", "dep:num-format"]
