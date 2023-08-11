@@ -2,6 +2,10 @@
 name = "alloc_stats"
 version = "0.1.0"
 edition = "2021"
+authors = ["ljedrz <ljedrz@gmail.com>"]
+license = "CC0-1.0"
+categories  = ["memory-management"]
+keywords    = ["allocator", "heap", "memory"]
 
 [features]
 fmt = ["dep:humansize", "dep:num-format"]
