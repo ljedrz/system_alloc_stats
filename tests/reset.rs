@@ -1,4 +1,4 @@
-use alloc_stats::SystemWithStats;
+use system_alloc_stats::SystemWithStats;
 
 #[global_allocator]
 static SWS: SystemWithStats = SystemWithStats;
