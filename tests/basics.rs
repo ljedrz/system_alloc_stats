@@ -21,9 +21,8 @@ fn alloc_basics() {
     let mut num_realloc_shrink = 0;
     let mut sum_realloc_shrink = 0;
     let mut curr_use;
-    // FIXME: this can get flaky on growth reallocs.
-    // let max_init_use;
-    // let mut max_alloc = 0;
+    let max_init_use;
+    let mut max_alloc = 0;
 
     // Prepare a source of randomness.
     let mut rng = XorShiftRng::from_rng(thread_rng()).unwrap();
@@ -33,7 +32,7 @@ fn alloc_basics() {
 
     // Initialize current and max mem use.
     curr_use = SWS.use_curr();
-    // max_init_use = SWS.use_max();
+    max_init_use = SWS.use_max();
 
     for _ in 0..100 {
         // Create a small allocation of a random size.
@@ -41,9 +40,9 @@ fn alloc_basics() {
         let mut alloc: Vec<u8> = Vec::with_capacity(alloc_size);
 
         // Possibly update the max alloc size.
-        // if alloc_size > max_alloc {
-        // max_alloc = alloc_size;
-        // }
+        if alloc_size > max_alloc {
+            max_alloc = alloc_size;
+        }
 
         num_allocs += 1;
         sum_allocs += alloc_size;
@@ -72,7 +71,7 @@ fn alloc_basics() {
         );
 
         assert_eq!(SWS.use_curr(), curr_use);
-        // assert_eq!(SWS.use_max(), max_init_use + max_alloc);
+        assert_eq!(SWS.use_max(), max_init_use + max_alloc);
 
         let realloc_decision: u8 = rng.gen_range(0..3);
         match realloc_decision {
@@ -87,9 +86,9 @@ fn alloc_basics() {
                 alloc.reserve_exact(alloc_size + realloc_size);
 
                 // Possibly update the max alloc size.
-                // if alloc_size * 2 + realloc_size > max_alloc {
-                //     max_alloc = alloc_size * 2 + realloc_size;
-                // }
+                if alloc_size * 2 + realloc_size > max_alloc {
+                    max_alloc = alloc_size * 2 + realloc_size;
+                }
 
                 num_deallocs += 1;
                 sum_deallocs += alloc_size;
@@ -110,6 +109,11 @@ fn alloc_basics() {
                 // Shrink by realloc_size.
                 let realloc_size = rng.gen_range(1..min_alloc_size);
                 alloc.shrink_to(alloc_size - realloc_size);
+
+                // Possibly update the max alloc size.
+                if alloc_size * 2 - realloc_size > max_alloc {
+                    max_alloc = alloc_size * 2 - realloc_size;
+                }
 
                 num_deallocs += 1;
                 sum_deallocs += alloc_size;
