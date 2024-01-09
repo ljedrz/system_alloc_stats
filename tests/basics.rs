@@ -173,4 +173,21 @@ fn basics() {
         sum_deallocs += alloc_size;
         curr_use -= alloc_size;
     }
+
+    // Reset the stats.
+    SWS.reset();
+
+    // Check that all the relevant counters are now 0.
+    assert_eq!(SWS.alloc_count(), 0);
+    assert_eq!(SWS.alloc_sum(), 0);
+    assert_eq!(SWS.alloc_avg(), None);
+    assert_eq!(SWS.dealloc_count(), 0);
+    assert_eq!(SWS.dealloc_sum(), 0);
+    assert_eq!(SWS.dealloc_avg(), None);
+    assert_eq!(SWS.realloc_growth_count(), 0);
+    assert_eq!(SWS.realloc_growth_sum(), 0);
+    assert_eq!(SWS.realloc_growth_avg(), None);
+    assert_eq!(SWS.realloc_shrink_count(), 0);
+    assert_eq!(SWS.realloc_shrink_sum(), 0);
+    assert_eq!(SWS.realloc_shrink_avg(), None);
 }
