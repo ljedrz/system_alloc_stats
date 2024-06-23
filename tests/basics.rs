@@ -21,7 +21,6 @@ fn basics() {
     let mut num_realloc_shrink = 0;
     let mut sum_realloc_shrink = 0;
     let mut curr_use;
-    let max_init_use;
     let mut max_alloc = 0;
 
     // Prepare a source of randomness.
@@ -32,7 +31,7 @@ fn basics() {
 
     // Initialize current and max mem use.
     curr_use = SWS.use_curr();
-    max_init_use = SWS.use_max();
+    let max_init_use = SWS.use_max();
 
     for _ in 0..100 {
         // Create a small allocation of a random size.
